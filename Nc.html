@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>งูน้อยเควส: ควิซ Python เบื้องต้น</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #24352A;
+    --bg-elevated: #2E4436;
+    --bg-card: #2B4032;
+    --chalk: #F3EFE0;
+    --chalk-dim: #BFC0AC;
+    --accent-yellow: #FFD966;
+    --accent-mint: #7FD9A4;
+    --accent-coral: #FF8271;
+    --rule: rgba(243,239,224,0.22);
+    --rule-strong: rgba(243,239,224,0.4);
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    background:
+      radial-gradient(ellipse at 15% 10%, rgba(255,255,255,0.035), transparent 40%),
+      radial-gradient(ellipse at 85% 90%, rgba(255,255,255,0.03), transparent 45%),
+      var(--bg);
+    color: var(--chalk);
+    font-family: 'Sarabun', sans-serif;
+  }
+  .wrap{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom: 22px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand h1{
+    font-family:'Kanit', sans-serif;
+    font-weight:700;
+    font-size: 20px;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+  .brand h1 span{ color: var(--accent-yellow); }
+  .brand small{
+    display:block;
+    font-size: 12px;
+    color: var(--chalk-dim);
+    font-weight:500;
+    margin-top:2px;
+  }
+  .logo-snake{ width:40px; height:40px; flex-shrink:0; }
+
+  .level-badge{
+    font-family:'Kanit', sans-serif;
+    font-size: 12px;
+    font-weight:600;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1.5px solid var(--rule-strong);
+    color: var(--chalk-dim);
+    white-space: nowrap;
+  }
+  .level-badge.easy{ border-color: var(--accent-mint); color: var(--accent-mint); }
+  .level-badge.medium{ border-color: var(--accent-yellow); color: var(--accent-yellow); }
+  .level-badge.hard{ border-color: var(--accent-coral); color: var(--accent-coral); }
+
+  /* progress: snake body segments */
+  .progress-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin: 6px 0 26px;
+    flex-wrap: wrap;
+  }
+  .segment{
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--rule-strong);
+    background: var(--bg-elevated);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Kanit', sans-serif;
+    font-size: 11px;
+    color: var(--chalk-dim);
+    transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    flex-shrink:0;
+  }
+  .segment.current{
+    border-color: var(--accent-yellow);
+    color: var(--chalk);
+    transform: scale(1.12);
+  }
+  .segment.correct{
+    background: var(--accent-mint);
+    border-color: var(--accent-mint);
+    color: #1c2b21;
+  }
+  .segment.wrong{
+    background: var(--accent-coral);
+    border-color: var(--accent-coral);
+    color: #2b1a16;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .segment{ transition: none; }
+  }
+
+  /* Card */
+  .card{
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 26px 24px 24px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    inset: 8px;
+    border: 1.5px dashed var(--rule);
+    border-radius: 12px;
+    pointer-events:none;
+  }
+  .eyebrow{
+    font-family:'Kanit', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: var(--accent-yellow);
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+  .question{
+    font-family:'Kanit', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0 0 20px;
+  }
+  .code{
+    display:inline-block;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-family: 'Sarabun', monospace;
+    color: var(--accent-mint);
+    font-size: 0.95em;
+  }
+
+  .options{
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .opt{
+    text-align:left;
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--rule);
+    color: var(--chalk);
+    font-family:'Sarabun', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 13px 16px;
+    border-radius: 12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+  .opt .tag{
+    font-family:'Kanit',sans-serif;
+    font-weight:600;
+    font-size:12px;
+    color: var(--chalk-dim);
+    width: 20px;
+    flex-shrink:0;
+  }
+  .opt:hover:not(:disabled){
+    border-color: var(--rule-strong);
+    background: #33503f;
+  }
+  .opt:focus-visible{
+    outline: 2px solid var(--accent-yellow);
+    outline-offset: 2px;
+  }
+  .opt:active:not(:disabled){ transform: scale(0.99); }
+  .opt:disabled{ cursor: default; }
+  .opt.correct{
+    border-color: var(--accent-mint);
+    background: rgba(127,217,164,0.16);
+  }
+  .opt.wrong{
+    border-color: var(--accent-coral);
+    background: rgba(255,130,113,0.16);
+  }
+  .opt.dim{ opacity: 0.55; }
+
+  .note{
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--bg-elevated);
+    border-left: 3px solid var(--accent-yellow);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--chalk);
+    display:none;
+  }
+  .note.show{ display:block; }
+  .note b{ color: var(--accent-yellow); }
+
+  .next-row{
+    margin-top: 18px;
+    display:flex;
+    justify-content: flex-end;
+  }
+  .btn{
+    font-family:'Kanit', sans-serif;
+    font-weight:600;
+    font-size: 14px;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 20px;
+    cursor:pointer;
+    background: var(--accent-yellow);
+    color: #24352A;
+    display:none;
+    align-items:center;
+    gap:6px;
+  }
+  .btn.show{ display:inline-flex; }
+  .btn:focus-visible{ outline: 2px solid var(--chalk); outline-offset:2px; }
+  .btn:hover{ filter: brightness(1.06); }
+
+  /* mascot + speech */
+  .buddy-row{
+    display:flex;
+    align-items:flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .buddy{ width: 52px; height: 52px; flex-shrink:0; }
+  .bubble{
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 14px 14px 14px 3px;
+    padding: 9px 14px;
+    font-size: 13px;
+    color: var(--chalk-dim);
+    font-family:'Sarabun',sans-serif;
+  }
+
+  /* Start screen: difficulty picker */
+  .start-card{ text-align:center; }
+  .start-card p.lead{
+    color: var(--chalk-dim);
+    font-size: 14px;
+    max-width: 420px;
+    margin: 4px auto 22px;
+    line-height: 1.6;
+  }
+  .level-grid{
+    display:flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .level-card{
+    display:flex;
+    align-items:center;
+    gap: 14px;
+    text-align:left;
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--rule);
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor:pointer;
+    color: var(--chalk);
+    font-family:'Sarabun', sans-serif;
+    transition: border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+  }
+  .level-card:hover{ background:#33503f; }
+  .level-card:focus-visible{ outline: 2px solid var(--accent-yellow); outline-offset:2px; }
+  .level-card:active{ transform: scale(0.99); }
+  .level-icon{
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 20px;
+    flex-shrink:0;
+  }
+  .level-card.easy .level-icon{ background: rgba(127,217,164,0.18); }
+  .level-card.medium .level-icon{ background: rgba(255,217,102,0.18); }
+  .level-card.hard .level-icon{ background: rgba(255,130,113,0.18); }
+  .level-card.easy{ border-color: rgba(127,217,164,0.4); }
+  .level-card.medium{ border-color: rgba(255,217,102,0.4); }
+  .level-card.hard{ border-color: rgba(255,130,113,0.4); }
+  .level-info b{
+    font-family:'Kanit', sans-serif;
+    font-size: 15px;
+    display:block;
+    margin-bottom: 2px;
+  }
+  .level-info span{
+    font-size: 12.5px;
+    color: var(--chalk-dim);
+  }
+
+  /* Result screen */
+  .result{ text-align:center; }
+  .result h2{
+    font-family:'Kanit', sans-serif;
+    font-size: 26px;
+    margin: 14px 0 4px;
+  }
+  .result .score{
+    font-family:'Kanit', sans-serif;
+    font-size: 44px;
+    font-weight:700;
+    color: var(--accent-yellow);
+    margin: 6px 0;
+  }
+  .result p.msg{
+    color: var(--chalk-dim);
+    font-size: 14px;
+    max-width: 380px;
+    margin: 8px auto 22px;
+    line-height:1.6;
+  }
+  .result-btn-row{
+    display:flex;
+    gap: 10px;
+    justify-content:center;
+    flex-wrap: wrap;
+  }
+  .retry, .switch-level{
+    font-family:'Kanit', sans-serif;
+    font-weight:600;
+    border:none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .retry{
+    background: var(--accent-mint);
+    color: #1c2b21;
+  }
+  .switch-level{
+    background: transparent;
+    border: 1.5px solid var(--rule-strong);
+    color: var(--chalk);
+  }
+  .retry:hover, .switch-level:hover{ filter: brightness(1.05); }
+  .retry:focus-visible, .switch-level:focus-visible{ outline: 2px solid var(--chalk); outline-offset:2px; }
+
+  .hidden{ display:none !important; }
+
+  footer{
+    text-align:center;
+    color: var(--chalk-dim);
+    font-size: 12px;
+    margin-top: 24px;
+  }
+
+  /* bottom toast for wrong answers */
+  .toast{
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translate(-50%, 20px);
+    max-width: min(520px, calc(100vw - 32px));
+    width: max-content;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    background: #3A241F;
+    border: 1.5px solid var(--accent-coral);
+    color: var(--chalk);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 12px 18px;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 50;
+  }
+  .toast.show{
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  .toast .icon{ font-size: 18px; flex-shrink:0; }
+  @media (prefers-reduced-motion: reduce){
+    .toast{ transition: opacity 0.15s ease; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <svg class="logo-snake" viewBox="0 0 40 40" fill="none">
+        <path d="M8 28c0 5 4 8 9 8s9-4 9-9-4-8-8-8-6 2-6 5 2 4 4 4 3-1 3-3" stroke="#FFD966" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M8 28c-3-2-4-6-2-10 2-3 5-9 12-9 6 0 10 4 10 4" stroke="#7FD9A4" stroke-width="3.2" stroke-linecap="round"/>
+        <circle cx="27.5" cy="13.5" r="1.6" fill="#F3EFE0"/>
+      </svg>
+      <div>
+        <h1>งูน้อยเควส<span>.py</span></h1>
+        <small>ควิซ Python เบื้องต้น สำหรับคนเพิ่งเริ่ม</small>
+      </div>
+    </div>
+    <div class="level-badge hidden" id="levelBadge"></div>
+  </header>
+
+  <!-- START SCREEN: difficulty picker -->
+  <div id="startArea">
+    <div class="card start-card">
+      <p class="eyebrow">เลือกก่อนเริ่ม</p>
+      <p class="question" style="margin-bottom:6px;">อยากลองระดับไหนดี</p>
+      <p class="lead">เลือกความยากที่เหมาะกับตัวเอง ไม่ถนัดข้อไหนค่อยไปทบทวนแล้วกลับมาลองใหม่ได้เสมอ</p>
+      <div class="level-grid">
+        <button class="level-card easy" data-level="easy">
+          <span class="level-icon">🐣</span>
+          <span class="level-info"><b>ง่าย</b><span>คำสั่งพื้นฐานสุด ๆ เช่น print, ตัวแปร, comment</span></span>
+        </button>
+        <button class="level-card medium" data-level="medium">
+          <span class="level-icon">🐍</span>
+          <span class="level-info"><b>ปานกลาง</b><span>loop, list/tuple, ฟังก์ชัน, ตัวดำเนินการหาร</span></span>
+        </button>
+        <button class="level-card hard" data-level="hard">
+          <span class="level-icon">🔥</span>
+          <span class="level-info"><b>ยาก</b><span>slicing, dict, try/except, lambda, *args</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quizArea" class="hidden">
+    <div class="progress-row" id="progressRow"></div>
+
+    <div class="buddy-row">
+      <svg class="buddy" id="buddySvg" viewBox="0 0 60 60" fill="none"></svg>
+      <div class="bubble" id="buddyBubble">มาลองดูกันว่างูจะรอดกี่ข้อ 🐍</div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow" id="qCounter">ข้อ 1 / 10</p>
+      <p class="question" id="qText"></p>
+      <div class="options" id="optionsBox"></div>
+      <div class="note" id="noteBox"></div>
+      <div class="next-row">
+        <button class="btn" id="nextBtn">ข้อถัดไป →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="resultArea" class="hidden">
+    <div class="card result">
+      <svg class="buddy" id="resultSvg" viewBox="0 0 60 60" fill="none" style="width:70px;height:70px;margin:0 auto;"></svg>
+      <h2>สรุปผล</h2>
+      <div class="score" id="scoreText">0 / 10</div>
+      <p class="msg" id="resultMsg"></p>
+      <div class="result-btn-row">
+        <button class="retry" id="retryBtn">เล่นระดับเดิมอีกครั้ง 🔁</button>
+        <button class="switch-level" id="switchLevelBtn">เลือกระดับใหม่</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>ทำผิดได้ ไม่เป็นไร งูก็เคยลอกคราบมาก่อน 🐍</footer>
+</div>
+
+<div class="toast" id="wrongToast" role="status" aria-live="polite">
+  <span class="icon">🐍</span>
+  <span id="wrongToastText">ตอบผิดจ้า ลองดูคำอธิบายด้านบนนะ</span>
+</div>
+
+<script>
+const QUESTION_SETS = {
+  easy: {
+    label: 'ง่าย',
+    badgeClass: 'easy',
+    items: [
+      { q: 'คอมเมนต์ (comment) หนึ่งบรรทัดใน Python เขียนด้วยเครื่องหมายอะไร',
+        opts: ['//', '#', '/* */', '--'], correct: 1,
+        note: 'Python ใช้ <span class="code">#</span> นำหน้าข้อความที่ต้องการให้เป็นคอมเมนต์ โปรแกรมจะไม่รันบรรทัดนั้น' },
+      { q: 'ชื่อตัวแปรข้อใด "ใช้ไม่ได้" ใน Python',
+        opts: ['name1', '_name', '1name', 'my_name'], correct: 2,
+        note: 'ชื่อตัวแปรห้ามขึ้นต้นด้วยตัวเลข <span class="code">1name</span> จึงใช้ไม่ได้' },
+      { q: 'คำสั่งใดใช้รับค่าจากผู้ใช้ทางแป้นพิมพ์',
+        opts: ['input()', 'output()', 'read()', 'get()'], correct: 0,
+        note: '<span class="code">input()</span> ใช้รอรับข้อความที่ผู้ใช้พิมพ์เข้ามา แล้วคืนค่าเป็น string เสมอ' },
+      { q: '"10" กับ 10 เป็นชนิดข้อมูลเดียวกันหรือไม่',
+        opts: ['ใช่ เหมือนกันทุกอย่าง', 'ไม่ใช่ "10" เป็นข้อความ (str) ส่วน 10 เป็นตัวเลข (int)', 'ทั้งคู่เป็น float', 'แล้วแต่ระบบ'], correct: 1,
+        note: 'เครื่องหมายคำพูดครอบตัวเลขจะทำให้กลายเป็น <b>string</b> ไม่ใช่ตัวเลขที่คำนวณได้' },
+      { q: 'ผลลัพธ์ของ <span class="code">print(1 + 2)</span> คือเท่าไร',
+        opts: ['12', '3', 'error', '1 2'], correct: 1,
+        note: '1 + 2 เป็นการบวกเลข ผลลัพธ์คือ 3' },
+      { q: 'ผลลัพธ์ของ <span class="code">True and False</span> คือข้อใด',
+        opts: ['True', 'False', '1', 'error'], correct: 1,
+        note: '<span class="code">and</span> จะเป็นจริงก็ต่อเมื่อทั้งสองฝั่งเป็นจริง เมื่อมีฝั่งเป็น False ผลลัพธ์จึงเป็น False' },
+      { q: 'ลิสต์ (list) ใน Python เขียนด้วยวงเล็บชนิดใด',
+        opts: ['( )', '[ ]', '{ }', '< >'], correct: 1,
+        note: 'list ใช้วงเล็บเหลี่ยม เช่น <span class="code">[1, 2, 3]</span>' },
+      { q: 'ผลลัพธ์ของ <span class="code">len([1, 2, 3])</span> คือเท่าไร',
+        opts: ['2', '3', '4', 'error'], correct: 1,
+        note: '<span class="code">len()</span> นับจำนวนสมาชิกใน list ซึ่งมีอยู่ 3 ตัว' },
+      { q: 'ท้ายบรรทัดของคำสั่ง <span class="code">if</span> ต้องใส่เครื่องหมายอะไร',
+        opts: [';', ':', '.', ','], correct: 1,
+        note: 'คำสั่งควบคุมอย่าง if, for, while, def ต้องปิดท้ายด้วย <b>เครื่องหมายโคลอน ( : )</b>' },
+      { q: 'ผลลัพธ์ของ <span class="code">"Py" + "thon"</span> คือข้อใด',
+        opts: ['"Py thon"', '"Python"', 'error', '"Pythonthon"'], correct: 1,
+        note: 'เครื่องหมาย <span class="code">+</span> กับ string คือการต่อข้อความเข้าด้วยกัน' }
+    ]
+  },
+  medium: {
+    label: 'ปานกลาง',
+    badgeClass: 'medium',
+    items: [
+      { q: 'คำสั่ง <span class="code">print("Hello")</span> จะให้ผลลัพธ์อะไร',
+        opts: ['"Hello"', 'Hello', 'print Hello', 'เกิด error'], correct: 1,
+        note: 'print() ใช้แสดงข้อความออกทางหน้าจอ โดยจะ<b>ไม่แสดงเครื่องหมายคำพูด</b> ที่ครอบข้อความไว้' },
+      { q: 'ก่อนใช้งานตัวแปรใน Python ต้องประกาศชนิดข้อมูล (int, str, ...) ก่อนหรือไม่',
+        opts: ['ต้องประกาศเสมอ', 'ไม่ต้อง Python จะเดาชนิดข้อมูลให้เอง', 'ต้องประกาศเฉพาะตัวเลข', 'แล้วแต่ระบบปฏิบัติการ'], correct: 1,
+        note: 'Python เป็นภาษาแบบ <b>dynamic typing</b> พอเราเขียน <span class="code">x = 5</span> มันจะรู้เองว่า x เป็น int' },
+      { q: 'ข้อใดต่างกันระหว่าง list กับ tuple',
+        opts: ['list แก้ไขค่าได้ tuple แก้ไขค่าไม่ได้', 'tuple แก้ไขค่าได้ list แก้ไขค่าไม่ได้', 'ทั้งสองแก้ไขค่าได้เหมือนกัน', 'ทั้งสองแก้ไขค่าไม่ได้เลย'], correct: 0,
+        note: 'list ใช้ <span class="code">[ ]</span> และแก้ไขได้ (mutable) ส่วน tuple ใช้ <span class="code">( )</span> และแก้ไขค่าไม่ได้ (immutable)' },
+      { q: 'ผลลัพธ์ของ <span class="code">5 // 2</span> คือเท่าไร',
+        opts: ['2.5', '2', '1', '0'], correct: 1,
+        note: '<span class="code">//</span> คือหารแบบปัดเศษทิ้ง (floor division) ดังนั้น 5 หาร 2 ได้ 2 เศษ 1 จึงเหลือแค่ 2' },
+      { q: 'ผลลัพธ์ของ <span class="code">5 % 2</span> คือเท่าไร',
+        opts: ['2', '0', '1', '2.5'], correct: 2,
+        note: '<span class="code">%</span> คือตัวดำเนินการหาเศษ (modulo) 5 หาร 2 ได้ 2 เศษ <b>1</b>' },
+      { q: 'คำสั่งใดใช้สำหรับวนซ้ำ (loop) ใน Python',
+        opts: ['if / else', 'for และ while', 'def / return', 'try / except'], correct: 1,
+        note: 'Python มีลูปหลักสองแบบคือ <span class="code">for</span> (วนตามจำนวนรอบ/สมาชิก) และ <span class="code">while</span> (วนตามเงื่อนไข)' },
+      { q: 'Python ใช้อะไรกำหนดขอบเขตของโค้ด (แทนวงเล็บปีกกา { } ในภาษาอื่น)',
+        opts: ['เครื่องหมายเซมิโคลอน ;', 'การเยื้องบรรทัด (indentation)', 'วงเล็บก้ามปู [ ]', 'ไม่ต้องกำหนดเลย'], correct: 1,
+        note: 'Python ใช้<b>การเยื้องบรรทัด</b>แทนวงเล็บปีกกา ถ้าเยื้องไม่ตรงกันจะเจอ IndentationError' },
+      { q: 'ผลลัพธ์ของ <span class="code">len("Python")</span> คือเท่าไร',
+        opts: ['5', '6', '7', 'error'], correct: 1,
+        note: '"Python" มีตัวอักษร 6 ตัว (P-y-t-h-o-n) ฟังก์ชัน <span class="code">len()</span> จึงคืนค่า 6' },
+      { q: 'การสร้างฟังก์ชันใน Python ต้องใช้คำสั่งใดนำหน้า',
+        opts: ['func', 'function', 'def', 'lambda เท่านั้น'], correct: 2,
+        note: 'ใช้ <span class="code">def ชื่อฟังก์ชัน():</span> เช่น <span class="code">def greet(): ...</span>' },
+      { q: 'ผลลัพธ์ของ <span class="code">type(3.14)</span> คือข้อใด',
+        opts: ["<class 'int'>", "<class 'float'>", "<class 'str'>", "<class 'double'>"], correct: 1,
+        note: 'ตัวเลขที่มีจุดทศนิยมจะถูกมองเป็นชนิด <span class="code">float</span> เสมอ ส่วน int คือเลขจำนวนเต็ม' }
+    ]
+  },
+  hard: {
+    label: 'ยาก',
+    badgeClass: 'hard',
+    items: [
+      { q: 'จาก list <span class="code">[10, 20, 30, 40]</span> คำสั่ง <span class="code">list[1:3]</span> คืนค่าอะไร',
+        opts: ['[10, 20]', '[20, 30]', '[20, 30, 40]', '[10, 20, 30]'], correct: 1,
+        note: 'การทำ <b>slicing</b> <span class="code">[1:3]</span> จะเอาตั้งแต่ index 1 ถึงก่อน index 3 ได้แก่ index 1,2 คือ [20, 30]' },
+      { q: 'ผลลัพธ์ของ <span class="code">"hello".upper()</span> คือข้อใด',
+        opts: ['"HELLO"', '"Hello"', '"hello"', 'error'], correct: 0,
+        note: '<span class="code">.upper()</span> เป็น method ของ string ใช้แปลงตัวอักษรทั้งหมดเป็นพิมพ์ใหญ่' },
+      { q: 'ผลลัพธ์ของ <span class="code">[x*2 for x in range(3)]</span> คือข้อใด',
+        opts: ['[0, 1, 2]', '[0, 2, 4]', '[2, 4, 6]', '[1, 2, 3]'], correct: 1,
+        note: 'นี่คือ <b>list comprehension</b>: range(3) ให้ 0,1,2 แล้วคูณ 2 แต่ละตัว จึงได้ [0, 2, 4]' },
+      { q: 'การใช้ list เป็นค่า default ของ argument ในฟังก์ชัน (เช่น <span class="code">def f(x=[]):</span>) อาจทำให้เกิดปัญหาอะไร',
+        opts: ['โปรแกรมช้าลงมาก', 'ค่า default ถูกสร้างครั้งเดียวและถูกแชร์ข้ามการเรียกฟังก์ชัน', 'ฟังก์ชันจะ error ทันที', 'ไม่มีปัญหาเลย'], correct: 1,
+        note: 'list เป็น mutable และค่า default จะถูกสร้าง<b>ครั้งเดียวตอนนิยามฟังก์ชัน</b> ทำให้ค่าที่แก้ไขไว้ค้างอยู่ในการเรียกครั้งถัดไป' },
+      { q: 'ใน <span class="code">def f(*args):</span> เครื่องหมาย <span class="code">*args</span> ใช้ทำอะไร',
+        opts: ['รับ keyword argument ไม่จำกัด', 'รับ positional argument จำนวนไม่จำกัดเป็น tuple', 'ทำให้ argument เป็นค่า default', 'ใช้ import module'], correct: 1,
+        note: '<span class="code">*args</span> รวบรวม positional argument ที่ส่งเข้ามาทั้งหมดไว้เป็น <b>tuple</b>' },
+      { q: 'คำสั่ง <span class="code">try / except</span> ใช้ทำอะไร',
+        opts: ['วนซ้ำโค้ด', 'ดักจับข้อผิดพลาด (exception) ไม่ให้โปรแกรมหยุดทำงาน', 'สร้างฟังก์ชันใหม่', 'เปรียบเทียบค่า'], correct: 1,
+        note: '<span class="code">try</span> คือโค้ดที่อาจ error ส่วน <span class="code">except</span> คือส่วนที่จัดการเมื่อเกิด error นั้น' },
+      { q: 'dictionary (dict) ใน Python สร้างด้วยวงเล็บชนิดใด',
+        opts: ['[ ]', '( )', '{ }', '< >'], correct: 2,
+        note: 'dict ใช้วงเล็บปีกกา เช่น <span class="code">{"name": "Beam"}</span> เก็บข้อมูลแบบ key-value' },
+      { q: '<span class="code">is</span> กับ <span class="code">==</span> ต่างกันอย่างไร',
+        opts: ['เหมือนกันทุกกรณี', 'is เทียบว่าเป็น object เดียวกันใน memory, == เทียบค่า', 'is ใช้กับตัวเลขเท่านั้น', '== ใช้เทียบชนิดข้อมูล'], correct: 1,
+        note: '<span class="code">==</span> เทียบว่า<b>ค่าเท่ากันไหม</b> ส่วน <span class="code">is</span> เทียบว่าเป็น<b>ตัวแปรเดียวกันใน memory</b>หรือไม่' },
+      { q: 'ตัวแปรที่ประกาศไว้ภายในฟังก์ชัน (local variable) เรียกใช้จากนอกฟังก์ชันได้หรือไม่',
+        opts: ['ได้เสมอ', 'ไม่ได้ เว้นแต่ประกาศเป็น global', 'ได้เฉพาะตัวเลข', 'ขึ้นอยู่กับชื่อฟังก์ชัน'], correct: 1,
+        note: 'ตัวแปร local จะมีอยู่แค่ในขอบเขตของฟังก์ชันนั้น (scope) เมื่อฟังก์ชันจบการทำงาน ตัวแปรก็หายไป' },
+      { q: 'คำสั่ง <span class="code">lambda x: x + 1</span> คือการสร้างอะไร',
+        opts: ['ตัวแปร global', 'ฟังก์ชันไม่ระบุชื่อ (anonymous function)', 'class ใหม่', 'ลูป for'], correct: 1,
+        note: '<span class="code">lambda</span> ใช้สร้างฟังก์ชันสั้น ๆ แบบไม่มีชื่อ เทียบเท่ากับ <span class="code">def f(x): return x + 1</span>' }
+    ]
+  }
+};
+
+let currentLevel = null;
+let QUESTIONS = [];
+let current = 0;
+let score = 0;
+let answers = [];
+
+const startArea = document.getElementById('startArea');
+const quizArea = document.getElementById('quizArea');
+const resultArea = document.getElementById('resultArea');
+const levelBadge = document.getElementById('levelBadge');
+
+const progressRow = document.getElementById('progressRow');
+const qCounter = document.getElementById('qCounter');
+const qText = document.getElementById('qText');
+const optionsBox = document.getElementById('optionsBox');
+const noteBox = document.getElementById('noteBox');
+const nextBtn = document.getElementById('nextBtn');
+const buddySvg = document.getElementById('buddySvg');
+const buddyBubble = document.getElementById('buddyBubble');
+const retryBtn = document.getElementById('retryBtn');
+const switchLevelBtn = document.getElementById('switchLevelBtn');
+
+const wrongToast = document.getElementById('wrongToast');
+const wrongToastText = document.getElementById('wrongToastText');
+let toastTimer = null;
+const WRONG_MESSAGES = [
+  'ตอบผิดจ้า ลองดูคำอธิบายด้านบนนะ',
+  'ยังไม่ใช่ข้อนี้ ไม่เป็นไร ดูคำอธิบายแล้วลองข้อต่อไป',
+  'พลาดไปนิดเดียว ค่อย ๆ ทำความเข้าใจกันไป',
+  'งูตัวนี้ก็เคยตอบผิดเหมือนกัน สู้ ๆ นะ'
+];
+
+function showWrongToast(){
+  wrongToastText.textContent = WRONG_MESSAGES[Math.floor(Math.random() * WRONG_MESSAGES.length)];
+  wrongToast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    wrongToast.classList.remove('show');
+  }, 3200);
+}
+
+function snakeFace(mood){
+  const mouth = mood === 'happy'
+    ? '<path d="M22 38 Q30 46 38 38" stroke="#24352A" stroke-width="2.4" stroke-linecap="round" fill="none"/>'
+    : mood === 'sad'
+    ? '<path d="M22 42 Q30 36 38 42" stroke="#24352A" stroke-width="2.4" stroke-linecap="round" fill="none"/>'
+    : '<path d="M22 40 Q30 42 38 40" stroke="#24352A" stroke-width="2.4" stroke-linecap="round" fill="none"/>';
+  const brows = mood === 'sad'
+    ? '<path d="M15 22 l7 3" stroke="#24352A" stroke-width="2.2" stroke-linecap="round"/><path d="M45 22 l-7 3" stroke="#24352A" stroke-width="2.2" stroke-linecap="round"/>'
+    : '';
+  return `
+  <circle cx="30" cy="30" r="26" fill="#FFD966"/>
+  <circle cx="21" cy="26" r="3.4" fill="#24352A"/>
+  <circle cx="39" cy="26" r="3.4" fill="#24352A"/>
+  ${brows}
+  ${mouth}
+  `;
+}
+function renderBuddy(mood){ buddySvg.innerHTML = snakeFace(mood); }
+function renderResultBuddy(mood){ document.getElementById('resultSvg').innerHTML = snakeFace(mood); }
+
+function buildProgress(){
+  progressRow.innerHTML = '';
+  QUESTIONS.forEach((_, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'segment';
+    seg.textContent = i + 1;
+    seg.id = 'seg-' + i;
+    progressRow.appendChild(seg);
+  });
+}
+
+function updateProgressUI(){
+  QUESTIONS.forEach((_, i) => {
+    const seg = document.getElementById('seg-' + i);
+    seg.classList.remove('current', 'correct', 'wrong');
+    if (answers[i] === 'correct') seg.classList.add('correct');
+    else if (answers[i] === 'wrong') seg.classList.add('wrong');
+    else if (i === current) seg.classList.add('current');
+  });
+}
+
+function loadQuestion(){
+  clearTimeout(toastTimer);
+  wrongToast.classList.remove('show');
+  noteBox.classList.remove('show');
+  noteBox.innerHTML = '';
+  nextBtn.classList.remove('show');
+  updateProgressUI();
+  renderBuddy('neutral');
+  buddyBubble.textContent = 'ข้อนี้ลองคิดดูดี ๆ นะ 🤔';
+
+  const item = QUESTIONS[current];
+  qCounter.textContent = `ข้อ ${current + 1} / ${QUESTIONS.length}`;
+  qText.innerHTML = item.q;
+
+  optionsBox.innerHTML = '';
+  const letters = ['ก', 'ข', 'ค', 'ง'];
+  item.opts.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = `<span class="tag">${letters[idx]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectAnswer(idx));
+    optionsBox.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx){
+  const item = QUESTIONS[current];
+  const opts = optionsBox.querySelectorAll('.opt');
+  const isCorrect = idx === item.correct;
+
+  opts.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === item.correct) btn.classList.add('correct');
+    if (i === idx && !isCorrect) btn.classList.add('wrong');
+    if (i !== idx && i !== item.correct) btn.classList.add('dim');
+  });
+
+  if (isCorrect){
+    score++;
+    answers[current] = 'correct';
+    renderBuddy('happy');
+    buddyBubble.textContent = 'ถูกต้อง! เก่งมาก 🎉';
+  } else {
+    answers[current] = 'wrong';
+    renderBuddy('sad');
+    buddyBubble.textContent = 'พลาดนิดเดียว ดูคำอธิบายด้านล่างนะ';
+    showWrongToast();
+  }
+
+  updateProgressUI();
+  noteBox.innerHTML = item.note;
+  noteBox.classList.add('show');
+  nextBtn.classList.add('show');
+  nextBtn.textContent = current === QUESTIONS.length - 1 ? 'ดูผลลัพธ์ →' : 'ข้อถัดไป →';
+}
+
+nextBtn.addEventListener('click', () => {
+  if (current < QUESTIONS.length - 1){
+    current++;
+    loadQuestion();
+  } else {
+    showResult();
+  }
+});
+
+function showResult(){
+  quizArea.classList.add('hidden');
+  resultArea.classList.remove('hidden');
+  document.getElementById('scoreText').textContent = `${score} / ${QUESTIONS.length}`;
+
+  let mood, msg;
+  if (score >= Math.ceil(QUESTIONS.length * 0.9)){
+    mood = 'happy';
+    msg = 'สุดยอด! พื้นฐาน Python แน่นมาก งูตัวนี้พร้อมลอกคราบไปเขียนโค้ดจริงได้แล้ว';
+  } else if (score >= Math.ceil(QUESTIONS.length * 0.6)){
+    mood = 'happy';
+    msg = 'ไปได้สวย! เข้าใจส่วนใหญ่แล้ว ลองทบทวนข้อที่พลาดอีกนิดก็จะแน่นขึ้น';
+  } else if (score >= Math.ceil(QUESTIONS.length * 0.3)){
+    mood = 'neutral';
+    msg = 'เริ่มต้นได้ดี ยังงง ๆ อยู่บ้างเป็นเรื่องปกติ ลองอ่านคำอธิบายแต่ละข้อแล้วลองใหม่อีกครั้ง';
+  } else {
+    mood = 'sad';
+    msg = 'ยังไม่คุ้นเคยกับเรื่องนี้เท่าไร ไม่เป็นไรเลย ลองเริ่มจากระดับที่ง่ายกว่านี้ก่อนก็ได้';
+  }
+  renderResultBuddy(mood);
+  document.getElementById('resultMsg').textContent = msg;
+}
+
+function startQuiz(level){
+  currentLevel = level;
+  QUESTIONS = QUESTION_SETS[level].items;
+  current = 0;
+  score = 0;
+  answers = [];
+
+  levelBadge.textContent = QUESTION_SETS[level].label;
+  levelBadge.className = 'level-badge ' + QUESTION_SETS[level].badgeClass;
+  levelBadge.classList.remove('hidden');
+
+  startArea.classList.add('hidden');
+  resultArea.classList.add('hidden');
+  quizArea.classList.remove('hidden');
+
+  buildProgress();
+  loadQuestion();
+}
+
+document.querySelectorAll('.level-card').forEach(card => {
+  card.addEventListener('click', () => startQuiz(card.dataset.level));
+});
+
+retryBtn.addEventListener('click', () => startQuiz(currentLevel));
+
+switchLevelBtn.addEventListener('click', () => {
+  resultArea.classList.add('hidden');
+  quizArea.classList.add('hidden');
+  levelBadge.classList.add('hidden');
+  startArea.classList.remove('hidden');
+});
+</script>
+</body>
+</html>
